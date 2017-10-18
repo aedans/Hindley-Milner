@@ -5,7 +5,7 @@ package io.github.aedans.hm
  */
 
 fun unify(t1: Type, t2: Type): Subst = when {
-    t1 is Type.Arrow && t2 is Type.Arrow -> {
+    t1 is Type.Apply && t2 is Type.Apply -> {
         val s1 = unify(t1.t1, t2.t1)
         val s2 = unify(apply(s1, t1.t2), apply(s1, t2.t2))
         s2 compose s1
@@ -23,7 +23,7 @@ fun bind(tVar: Type.Var, type: Type): Subst = when {
 }
 
 fun occursIn(tVar: Type.Var, type: Type): Boolean = when (type) {
-    is Type.Arrow -> occursIn(tVar, type.t1) || occursIn(tVar, type.t2)
+    is Type.Apply -> occursIn(tVar, type.t1) || occursIn(tVar, type.t2)
     is Type.Var -> type == tVar
     is Type.Const -> false
 }

@@ -13,10 +13,14 @@ sealed class Type {
         override fun toString() = name
     }
 
-    data class Arrow(val t1: Type, val t2: Type) : Type() {
-        override fun toString() = "($t1 -> $t2)"
+    data class Apply(val t1: Type, val t2: Type) : Type() {
+        override fun toString() = "($t1) $t2"
     }
+
+    data class Arrow(val t1: Type, val t2: Type)
 }
+
+val Type.Arrow.type get() = Type.Apply(Type.Apply(Type.Const("->"), t1), t2)
 
 val Type.scheme get() = Scheme(emptyList(), this)
 

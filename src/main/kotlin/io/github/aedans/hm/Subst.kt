@@ -20,7 +20,7 @@ fun apply(subst: Subst, scheme: Scheme): Scheme = run {
 fun apply(subst: Subst, type: Type): Type = when (type) {
     is Type.Const -> type
     is Type.Var -> subst.getOrDefault(type.name, type)
-    is Type.Arrow -> Type.Arrow(apply(subst, type.t1), apply(subst, type.t2))
+    is Type.Apply -> Type.Apply(apply(subst, type.t1), apply(subst, type.t2))
 }
 
 fun apply(subst: Subst, env: Env): Env = env.mapValues { apply(subst, it.value) }
@@ -30,7 +30,7 @@ val Scheme.freeTypeVariables: Set<String> get() = type.freeTypeVariables - names
 val Type.freeTypeVariables: Set<String> get() = when (this) {
     is Type.Const -> emptySet()
     is Type.Var -> setOf(name)
-    is Type.Arrow -> t1.freeTypeVariables union t2.freeTypeVariables
+    is Type.Apply -> t1.freeTypeVariables union t2.freeTypeVariables
 }
 
 val Env.freeTypeVariables: Set<String> get() = entries.flatMap { it.value.freeTypeVariables }.toSet()
