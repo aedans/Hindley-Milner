@@ -4,7 +4,7 @@ package io.github.aedans.hm
  * Created by Aedan Smith.
  */
 
-var fresh = 'a'
+var fresh = 0
 fun fresh() = "${fresh++}"
 
 typealias Env = Map<Expr.Var, Scheme>

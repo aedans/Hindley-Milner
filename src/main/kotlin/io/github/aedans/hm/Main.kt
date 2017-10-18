@@ -13,7 +13,7 @@ fun main(args: Array<String>) {
         println(expr)
         val (_, type) = expr.infer(emptyMap())
         println(type.generalize(emptyMap()))
-        fresh = 'a'
+        fresh = 0
         print(">")
     }
 }
