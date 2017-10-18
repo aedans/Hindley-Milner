@@ -9,7 +9,7 @@ import com.github.h0tk3y.betterParse.grammar.parseToEnd
 fun main(args: Array<String>) {
     print(">")
     System.`in`.bufferedReader().lines().forEach {
-        val expr = ExprGrammar.parseToEnd(it)
+        val expr = Grammar.parseToEnd(it)
         println(expr)
         val (_, type) = expr.infer(emptyMap())
         println(type.generalize(emptyMap()))

@@ -17,6 +17,10 @@ sealed class Expr {
         override fun toString() = "\\$name -> $expr"
     }
 
+    data class Cast(val expr: Expr, val type: Type) : Expr() {
+        override fun toString() = "($expr) :: $type"
+    }
+
     data class Boolean(val bool: kotlin.Boolean) : Expr() {
         override fun toString() = "$bool"
     }

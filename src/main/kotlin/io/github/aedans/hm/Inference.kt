@@ -7,6 +7,10 @@ package io.github.aedans.hm
 fun Expr.infer(env: Env): Pair<Subst, Type> = when (this) {
     is Expr.Boolean -> emptySubst to Type.Const("Bool")
     is Expr.Var -> env.getEnv(name)
+    is Expr.Cast -> {
+        val (exprSubst, exprType) = expr.infer(env)
+        exprSubst to apply(unify(exprType, type), exprType)
+    }
     is Expr.Apply -> {
         val typeVariable = Type.Var(fresh())
         val (expr1Subst, expr1Type) = expr1.infer(env)
@@ -15,10 +19,10 @@ fun Expr.infer(env: Env): Pair<Subst, Type> = when (this) {
         (substP compose expr2Subst compose expr1Subst) to apply(substP, typeVariable)
     }
     is Expr.Abstract -> {
-        val typeVariable = Type.Var(fresh())
-        val envP = env + mapOf(name to typeVariable.scheme)
+        val arg = Type.Var(fresh())
+        val envP = env + mapOf(name to arg.scheme)
         val (exprSubst, exprType) = expr.infer(envP)
-        exprSubst to Type.Arrow(apply(exprSubst, typeVariable), exprType).type
+        exprSubst to Type.Arrow(apply(exprSubst, arg), exprType).type
     }
 }
 

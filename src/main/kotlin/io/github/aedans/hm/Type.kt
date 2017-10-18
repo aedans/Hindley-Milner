@@ -27,3 +27,11 @@ val Type.scheme get() = Scheme(emptyList(), this)
 data class Scheme(val names: List<String>, val type: Type) {
     override fun toString() = "$names => $type"
 }
+
+fun Type.generalize(env: Env): Scheme = Scheme((freeTypeVariables - env.freeTypeVariables).toList(), this)
+
+fun Scheme.instantiate(): Type = run {
+    val namesP = names.map { Type.Var(fresh()) }
+    val namesZ: Subst = (names zip namesP).toMap()
+    apply(namesZ, type)
+}
