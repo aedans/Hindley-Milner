@@ -20,6 +20,6 @@ sealed class Type {
 
 val Type.scheme get() = Scheme(emptyList(), this)
 
-data class Scheme(val abs: List<Type.Var>, val type: Type) {
-    override fun toString() = "$abs => $type"
+data class Scheme(val names: List<String>, val type: Type) {
+    override fun toString() = "$names => $type"
 }

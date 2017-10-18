@@ -7,4 +7,4 @@ package io.github.aedans.hm
 var fresh = 0
 fun fresh() = "${fresh++}"
 
-typealias Env = Map<Expr.Var, Scheme>
+typealias Env = Map<String, Scheme>

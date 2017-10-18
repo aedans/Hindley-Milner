@@ -5,7 +5,7 @@ package io.github.aedans.hm
  */
 
 fun Scheme.instantiate(): Type = run {
-    val absP = abs.map { Type.Var(fresh()) }
-    val absZ = (abs zip absP).toMap()
-    apply(absZ, type)
+    val namesP = names.map { Type.Var(fresh()) }
+    val namesZ: Subst = (names zip namesP).toMap()
+    apply(namesZ, type)
 }

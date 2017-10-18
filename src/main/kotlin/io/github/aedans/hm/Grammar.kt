@@ -44,8 +44,8 @@ object ExprGrammar : AbstractGrammar<Expr>() {
         Expr.Apply(t1, t2)
     } or parser { abstractExprParser }
 
-    val abstractExprParser: Parser<Expr> = -backslash * parser { varExprParser } * -arrow * parser { exprParser } use {
-        Expr.Abstract(t1, t2)
+    val abstractExprParser: Parser<Expr> = -backslash * identifier * -arrow * parser { exprParser } use {
+        Expr.Abstract(t1.text, t2)
     } or parser { atomicExprParser }
 
     val atomicExprParser: Parser<Expr> = parser { parenthesizedExprParser } or

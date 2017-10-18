@@ -13,7 +13,7 @@ sealed class Expr {
         override fun toString() = "($expr1) $expr2"
     }
 
-    data class Abstract(val name: Expr.Var, val expr: Expr) : Expr() {
+    data class Abstract(val name: String, val expr: Expr) : Expr() {
         override fun toString() = "\\$name -> $expr"
     }
 

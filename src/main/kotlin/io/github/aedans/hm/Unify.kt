@@ -19,7 +19,7 @@ fun unify(t1: Type, t2: Type): Subst = when {
 fun bind(tVar: Type.Var, type: Type): Subst = when {
     tVar == type -> emptyMap()
     occursIn(tVar, type) -> throw Exception("Infinite")
-    else -> mapOf(tVar to type)
+    else -> mapOf(tVar.name to type)
 }
 
 fun occursIn(tVar: Type.Var, type: Type): Boolean = when (type) {

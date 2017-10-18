@@ -6,7 +6,7 @@ package io.github.aedans.hm
 
 fun Expr.infer(env: Env): Pair<Subst, Type> = when (this) {
     is Expr.Boolean -> emptySubst to Type.Const("Bool")
-    is Expr.Var -> env.getEnv(this)
+    is Expr.Var -> env.getEnv(name)
     is Expr.Apply -> {
         val typeVariable = Type.Var(fresh())
         val (expr1Subst, expr1Type) = expr1.infer(env)
@@ -22,4 +22,4 @@ fun Expr.infer(env: Env): Pair<Subst, Type> = when (this) {
     }
 }
 
-fun Env.getEnv(type: Expr.Var) = this[type]!!.let { emptySubst to it.instantiate() }
+fun Env.getEnv(name: String) = this[name]!!.let { emptySubst to it.instantiate() }
