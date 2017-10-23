@@ -20,17 +20,20 @@ sealed class Type {
     data class Arrow(val t1: Type, val t2: Type)
 }
 
-val Type.Arrow.type get() = Type.Apply(Type.Apply(Type.Const("->"), t1), t2)
-
-val Type.scheme get() = Scheme(emptyList(), this)
-
 data class Scheme(val names: List<String>, val type: Type) {
     override fun toString() = "$names => $type"
 }
 
-fun Type.generalize(env: Env): Scheme = Scheme((freeTypeVariables - env.freeTypeVariables).toList(), this)
+val Type.Arrow.type get() = Type.Apply(Type.Apply(Type.Const("->"), t1), t2)
 
-fun Scheme.instantiate(): Type = run {
+val Type.scheme get() = Scheme(emptyList(), this)
+
+fun Type.generalize(env: Env) = Scheme(
+        freeTypeVariables.filterNot { tVar -> env.get(tVar).let { it != null && it.names.contains(tVar) } },
+        this
+)
+
+fun Scheme.instantiate() = run {
     val namesP = names.map { Type.Var(fresh()) }
     val namesZ: Subst = (names zip namesP).toMap()
     apply(namesZ, type)

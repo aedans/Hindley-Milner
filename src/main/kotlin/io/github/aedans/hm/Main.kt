@@ -11,8 +11,8 @@ fun main(args: Array<String>) {
     System.`in`.bufferedReader().lines().forEach {
         val expr = Grammar.parseToEnd(it)
         println(expr)
-        val (_, type) = expr.infer(emptyMap())
-        println(type.generalize(emptyMap()))
+        val (_, type) = expr.infer(Env.empty)
+        println(type.generalize(Env.empty))
         fresh = 0
         print(">")
     }
