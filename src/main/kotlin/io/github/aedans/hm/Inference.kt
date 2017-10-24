@@ -35,8 +35,6 @@ fun Expr.infer(env: Env): Pair<Subst, Type> = when (this) {
         val t2 = apply(substP, expr2Type)
         if (t1 != t2)
             throw Exception()
-        println(expr1Type to expr2Type)
-        println(substP)
         (substP compose expr2Subst compose expr1Subst compose conditionSubst2 compose conditionSubst) to t1
     }
 }
