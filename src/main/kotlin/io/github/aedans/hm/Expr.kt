@@ -25,7 +25,7 @@ sealed class Expr {
         override fun toString() = "if $condition then $expr1 else $expr2"
     }
 
-    data class Boolean(val bool: kotlin.Boolean) : Expr() {
+    data class Bool(val bool: kotlin.Boolean) : Expr() {
         override fun toString() = "$bool"
     }
 }

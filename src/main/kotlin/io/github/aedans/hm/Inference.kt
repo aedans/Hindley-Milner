@@ -5,7 +5,7 @@ package io.github.aedans.hm
  */
 
 fun Expr.infer(env: Env): Pair<Subst, Type> = when (this) {
-    is Expr.Boolean -> emptySubst to Type.bool
+    is Expr.Bool -> emptySubst to Type.bool
     is Expr.Var -> env.get(name)!!.let { emptySubst to it.instantiate() }
     is Expr.Cast -> {
         val (exprSubst, exprType) = expr.infer(env)

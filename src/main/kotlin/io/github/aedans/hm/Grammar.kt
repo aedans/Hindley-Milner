@@ -62,7 +62,7 @@ object Grammar : com.github.h0tk3y.betterParse.grammar.Grammar<Expr>() {
 
     val varExprParser: Parser<Expr.Var> = identifier use { Expr.Var(text) }
 
-    val boolExprParser: Parser<Expr.Boolean> = (`true` or `false`) use { Expr.Boolean(text.toBoolean()) }
+    val boolExprParser: Parser<Expr.Bool> = (`true` or `false`) use { Expr.Bool(text.toBoolean()) }
 
     val parenthesizedExprParser: Parser<Expr> = -oParen * parser { exprParser } * -cParen
 
