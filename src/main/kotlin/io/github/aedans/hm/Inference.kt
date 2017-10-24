@@ -5,11 +5,12 @@ package io.github.aedans.hm
  */
 
 fun Expr.infer(env: Env): Pair<Subst, Type> = when (this) {
-    is Expr.Boolean -> emptySubst to Type.Const("Bool")
+    is Expr.Boolean -> emptySubst to Type.bool
     is Expr.Var -> env.get(name)!!.let { emptySubst to it.instantiate() }
     is Expr.Cast -> {
         val (exprSubst, exprType) = expr.infer(env)
-        exprSubst to apply(unify(exprType, type), exprType)
+        val substP = unify(exprType, type)
+        substP compose exprSubst to apply(substP, exprType)
     }
     is Expr.Apply -> {
         val typeVariable = Type.Var(fresh())
@@ -23,5 +24,19 @@ fun Expr.infer(env: Env): Pair<Subst, Type> = when (this) {
         val envP = env.set(name, arg.scheme)
         val (exprSubst, exprType) = expr.infer(envP)
         exprSubst to Type.Arrow(apply(exprSubst, arg), exprType).type
+    }
+    is Expr.If -> {
+        val (conditionSubst, conditionType) = condition.infer(env)
+        val conditionSubst2 = unify(conditionType, Type.bool) compose conditionSubst
+        val (expr1Subst, expr1Type) = expr1.infer(apply(conditionSubst2, env))
+        val (expr2Subst, expr2Type) = expr2.infer(apply(expr1Subst, env))
+        val substP = unify(expr1Type, expr2Type)
+        val t1 = apply(substP, expr1Type)
+        val t2 = apply(substP, expr2Type)
+        if (t1 != t2)
+            throw Exception()
+        println(expr1Type to expr2Type)
+        println(substP)
+        (substP compose expr2Subst compose expr1Subst compose conditionSubst2 compose conditionSubst) to t1
     }
 }

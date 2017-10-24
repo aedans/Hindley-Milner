@@ -12,12 +12,12 @@ fun unify(t1: Type, t2: Type): Subst = when {
     }
     t1 is Type.Var -> bind(t1, t2)
     t2 is Type.Var -> bind(t2, t1)
-    t1 is Type.Const && t2 is Type.Const && t1 == t2 -> emptyMap()
+    t1 is Type.Const && t2 is Type.Const && t1 == t2 -> emptySubst
     else -> throw Exception("Unable to unify")
 }
 
 fun bind(tVar: Type.Var, type: Type): Subst = when {
-    tVar == type -> emptyMap()
+    tVar == type -> emptySubst
     occursIn(tVar, type) -> throw Exception("Infinite")
     else -> mapOf(tVar.name to type)
 }

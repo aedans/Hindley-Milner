@@ -18,6 +18,10 @@ sealed class Type {
     }
 
     data class Arrow(val t1: Type, val t2: Type)
+
+    companion object {
+        val bool = Const("Bool")
+    }
 }
 
 data class Scheme(val names: List<String>, val type: Type) {
@@ -35,6 +39,6 @@ fun Type.generalize(env: Env) = Scheme(
 
 fun Scheme.instantiate() = run {
     val namesP = names.map { Type.Var(fresh()) }
-    val namesZ: Subst = (names zip namesP).toMap()
+    val namesZ = (names zip namesP).toMap()
     apply(namesZ, type)
 }

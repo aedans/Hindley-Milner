@@ -32,18 +32,28 @@ object Grammar : com.github.h0tk3y.betterParse.grammar.Grammar<Expr>() {
 
     override val rootParser = parser { exprParser }
 
-    val exprParser: Parser<Expr> = parser { applyExprParser }
+    // Exprs
 
-    val applyExprParser: Parser<Expr> = parser { abstractExprParser } * parser(this::applyExprParser) use {
-        Expr.Apply(t1, t2)
-    } or parser { abstractExprParser }
+    val exprParser: Parser<Expr> = parser { abstractExprParser } or
+            parser { ifExprParser } or
+            parser { castExprParser }
 
     val abstractExprParser: Parser<Expr> = -backslash * identifier * -arrow * parser { exprParser } use {
         Expr.Abstract(t1.text, t2)
-    } or parser { castExprParser }
+    }
 
-    val castExprParser: Parser<Expr> = parser { atomicExprParser } * -extends * parser { typeParser } use {
+    val ifExprParser: Parser<Expr> = -`if` * parser { exprParser } *
+            -`then` * parser { exprParser } *
+            -`else` * parser { exprParser } use {
+        Expr.If(t1, t2, t3)
+    }
+
+    val castExprParser: Parser<Expr> = parser { applyExprParser } * -extends * parser { typeParser } use {
         Expr.Cast(t1, t2)
+    } or parser { applyExprParser }
+
+    val applyExprParser: Parser<Expr> = parser { atomicExprParser } * parser(this::applyExprParser) use {
+        Expr.Apply(t1, t2)
     } or parser { atomicExprParser }
 
     val atomicExprParser: Parser<Expr> = parser { parenthesizedExprParser } or
@@ -55,6 +65,8 @@ object Grammar : com.github.h0tk3y.betterParse.grammar.Grammar<Expr>() {
     val boolExprParser: Parser<Expr.Boolean> = (`true` or `false`) use { Expr.Boolean(text.toBoolean()) }
 
     val parenthesizedExprParser: Parser<Expr> = -oParen * parser { exprParser } * -cParen
+
+    // Types
 
     val typeParser: Parser<Type> = parser { functionTypeParser }
 
