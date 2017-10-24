@@ -13,6 +13,7 @@ interface Env {
     companion object {
         val empty = object : Env {
             override fun get(name: String) = null
+            override fun toString() = "[]"
         }
     }
 }

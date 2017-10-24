@@ -6,35 +6,36 @@ package io.github.aedans.hm
 
 fun Expr.infer(env: Env): Pair<Subst, Type> = when (this) {
     is Expr.Bool -> emptySubst to Type.bool
-    is Expr.Var -> env.get(name)!!.let { emptySubst to it.instantiate() }
+    is Expr.Var -> env.get(name)?.let { emptySubst to it.instantiate() }
+            ?: throw NoSuchElementException(name)
     is Expr.Cast -> {
-        val (exprSubst, exprType) = expr.infer(env)
-        val substP = unify(exprType, type)
-        substP compose exprSubst to apply(substP, exprType)
+        val (s1, exprType) = expr.infer(env)
+        val s2 = unify(exprType, type)
+        s2 compose s1 to apply(s2, exprType)
     }
     is Expr.Apply -> {
         val typeVariable = Type.Var(fresh())
-        val (expr1Subst, expr1Type) = expr1.infer(env)
-        val (expr2Subst, expr2Type) = expr2.infer(apply(expr1Subst, env))
-        val substP = unify(apply(expr2Subst, expr1Type), Type.Arrow(expr2Type, typeVariable).type)
-        (substP compose expr2Subst compose expr1Subst) to apply(substP, typeVariable)
+        val (s1, expr1Type) = expr1.infer(env)
+        val (s2, expr2Type) = expr2.infer(apply(s1, env))
+        val s3 = unify(apply(s2, expr1Type), Type.Arrow(expr2Type, typeVariable).type)
+        (s3 compose s2 compose s1) to apply(s3, typeVariable)
     }
     is Expr.Abstract -> {
         val arg = Type.Var(fresh())
         val envP = env.set(name, arg.scheme)
-        val (exprSubst, exprType) = expr.infer(envP)
-        exprSubst to Type.Arrow(apply(exprSubst, arg), exprType).type
+        val (s1, exprType) = expr.infer(envP)
+        s1 to Type.Arrow(apply(s1, arg), exprType).type
     }
     is Expr.If -> {
-        val (conditionSubst, conditionType) = condition.infer(env)
-        val conditionSubst2 = unify(conditionType, Type.bool) compose conditionSubst
-        val (expr1Subst, expr1Type) = expr1.infer(apply(conditionSubst2, env))
-        val (expr2Subst, expr2Type) = expr2.infer(apply(expr1Subst, env))
-        val substP = unify(expr1Type, expr2Type)
-        val t1 = apply(substP, expr1Type)
-        val t2 = apply(substP, expr2Type)
+        val (s1, conditionType) = condition.infer(env)
+        val s2 = unify(conditionType, Type.bool)
+        val (s3, expr1Type) = expr1.infer(apply(s2, env))
+        val (s4, expr2Type) = expr2.infer(apply(s2, env))
+        val s5 = unify(expr1Type, expr2Type)
+        val t1 = apply(s5, expr1Type)
+        val t2 = apply(s5, expr2Type)
         if (t1 != t2)
             throw Exception()
-        (substP compose expr2Subst compose expr1Subst compose conditionSubst2 compose conditionSubst) to t1
+        (s5 compose s4 compose s3 compose s2 compose s1) to t1
     }
 }

@@ -1,3 +1,4 @@
+import com.beust.kobalt.plugin.application.application
 import com.beust.kobalt.plugin.packaging.assemble
 import com.beust.kobalt.project
 
@@ -13,8 +14,16 @@ val hm = project {
         compile("com.github.h0tk3y.betterParse:better-parse:0.2.1")
     }
 
+    dependenciesTest {
+        compile("org.testng:testng:6.11")
+    }
+
     assemble {
         jar {
         }
+    }
+
+    application {
+        mainClass = "io.github.aedans.hm.MainKt"
     }
 }
