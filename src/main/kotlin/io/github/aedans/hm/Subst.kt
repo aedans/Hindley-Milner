@@ -4,7 +4,7 @@ package io.github.aedans.hm
  * Created by Aedan Smith.
  */
 
-typealias Subst = Map<String, Type>
+typealias Subst = Map<String, TLCType.Mono>
 
 val emptySubst: Subst = emptyMap()
 
@@ -12,23 +12,23 @@ infix fun <A, B> Map<A, B>.union(map: Map<A, B>) = map + this
 
 infix fun Subst.compose(subst: Subst) = (subst union this).mapValues { apply(this, it.value) }
 
-fun apply(subst: Subst, scheme: Scheme) = run {
-    val substP = scheme.names.foldRight(subst) { a, b -> b - a }
-    Scheme(scheme.names, apply(substP, scheme.type))
+fun apply(subst: Subst, poly: TLCType.Poly) = run {
+    val substP = poly.names.foldRight(subst) { a, b -> b - a }
+    TLCType.Poly(poly.names, apply(substP, poly.type))
 }
 
-fun apply(subst: Subst, type: Type): Type = when (type) {
-    is Type.Const -> type
-    is Type.Var -> subst.getOrDefault(type.name, type)
-    is Type.Apply -> Type.Apply(apply(subst, type.t1), apply(subst, type.t2))
+fun apply(subst: Subst, type: TLCType.Mono): TLCType.Mono = when (type) {
+    is TLCType.Mono.Const -> type
+    is TLCType.Mono.Var -> subst.getOrDefault(type.name, type)
+    is TLCType.Mono.Apply -> TLCType.Mono.Apply(apply(subst, type.function), apply(subst, type.arg))
 }
 
 fun apply(subst: Subst, env: Env) = env.map { apply(subst, it) }
 
-val Scheme.freeTypeVariables get() = type.freeTypeVariables - names.toSet()
+val TLCType.Poly.freeTypeVariables get() = type.freeTypeVariables - names.toSet()
 
-val Type.freeTypeVariables: Set<String> get() = when (this) {
-    is Type.Const -> emptySet()
-    is Type.Var -> setOf(name)
-    is Type.Apply -> t1.freeTypeVariables union t2.freeTypeVariables
+val TLCType.Mono.freeTypeVariables: Set<String> get() = when (this) {
+    is TLCType.Mono.Const -> emptySet()
+    is TLCType.Mono.Var -> setOf(name)
+    is TLCType.Mono.Apply -> function.freeTypeVariables union arg.freeTypeVariables
 }

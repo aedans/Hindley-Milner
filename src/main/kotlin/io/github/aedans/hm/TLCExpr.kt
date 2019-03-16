@@ -59,7 +59,7 @@ sealed class TLCExpr {
      * @param expr The expression to cast.
      * @param type The type to cast to.
      */
-    data class Cast(val expr: TLCExpr, val type: Type) : TLCExpr() {
+    data class Cast(val expr: TLCExpr, val type: TLCType.Mono) : TLCExpr() {
         override fun toString() = "($expr) :: $type"
     }
 }
