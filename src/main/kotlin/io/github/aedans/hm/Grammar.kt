@@ -1,9 +1,6 @@
 package io.github.aedans.hm
 
-import com.github.h0tk3y.betterParse.combinators.or
-import com.github.h0tk3y.betterParse.combinators.times
-import com.github.h0tk3y.betterParse.combinators.unaryMinus
-import com.github.h0tk3y.betterParse.combinators.use
+import com.github.h0tk3y.betterParse.combinators.*
 import com.github.h0tk3y.betterParse.grammar.parser
 import com.github.h0tk3y.betterParse.parser.Parser
 
@@ -39,30 +36,30 @@ object Grammar : com.github.h0tk3y.betterParse.grammar.Grammar<TLCExpr>() {
             parser { castExprParser }
 
     val abstractExprParser: Parser<TLCExpr> = -backslash * identifier * -arrow * parser { exprParser } use {
-        TLCExpr.Abstract(t1.text, t2)
+        TLCExprF.abstract(t1.text, t2)
     }
 
     val ifExprParser: Parser<TLCExpr> = -`if` * parser { exprParser } *
             -`then` * parser { exprParser } *
             -`else` * parser { exprParser } use {
-        TLCExpr.If(t1, t2, t3)
+        TLCExprF.cond(t1, t2, t3)
     }
 
     val castExprParser: Parser<TLCExpr> = parser { applyExprParser } * -extends * parser { typeParser } use {
-        TLCExpr.Cast(t1, t2)
+        TLCExprF.cast(t1, t2)
     } or parser { applyExprParser }
 
     val applyExprParser: Parser<TLCExpr> = parser { atomicExprParser } * parser(this::applyExprParser) use {
-        TLCExpr.Apply(t1, t2)
+        TLCExprF.apply(t1, t2)
     } or parser { atomicExprParser }
 
     val atomicExprParser: Parser<TLCExpr> = parser { parenthesizedExprParser } or
             parser { boolExprParser } or
             parser { varExprParser }
 
-    val varExprParser: Parser<TLCExpr.Var> = identifier use { TLCExpr.Var(text) }
+    val varExprParser: Parser<TLCExpr> = identifier use { TLCExprF.variable(text) }
 
-    val boolExprParser: Parser<TLCExpr.Bool> = (`true` or `false`) use { TLCExpr.Bool(text.toBoolean()) }
+    val boolExprParser: Parser<TLCExpr> = (`true` or `false`) use { TLCExprF.bool(text.toBoolean()) }
 
     val parenthesizedExprParser: Parser<TLCExpr> = -oParen * parser { exprParser } * -cParen
 
