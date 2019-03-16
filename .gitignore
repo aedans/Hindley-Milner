@@ -1,7 +1,0 @@
-kobaltBuild
-kobalt/out
-.kobalt
-*.iml
-*.xml
-*.class
-*.jar
