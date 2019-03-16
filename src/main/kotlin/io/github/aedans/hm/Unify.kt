@@ -1,47 +1,58 @@
 package io.github.aedans.hm
 
+import arrow.Kind
 import arrow.core.*
-import arrow.core.extensions.eval.monad.monad
+import arrow.core.extensions.either.monad.monad
 import arrow.recursion.data.*
 import arrow.recursion.extensions.fix.recursive.recursive
+import arrow.recursion.typeclasses.Recursive
 
 /**
- * Created by Aedan Smith.
+ * Unifies two types [a] and [b], or returns a [InferenceError] if the unification is not possible.
  */
-
-class UnableToUnify(t1: Monotype, t2: Monotype) : Exception("Unable to unify ${t1 to t2}")
-class InfiniteBind(tVar: MonotypeF.Variable, type: Monotype) : Exception("Infinite bind ${tVar to type}")
-
-fun unify(a: Monotype, b: Monotype): Subst = run {
-    val t1 = a.unfix.fix()
-    val t2 = b.unfix.fix()
+fun unify(a: Monotype, b: Monotype): Either<InferenceError, Subst> = run {
+    val a = a.unfix.fix()
+    val b = b.unfix.fix()
     when {
-        t1 is MonotypeF.Apply && t2 is MonotypeF.Apply -> {
-            val s1 = unify(t1.function.value().fix(), t2.function.value().fix())
-            val s2 = unify(apply(s1, t1.arg.value().fix()), apply(s1, t2.arg.value().fix()))
+        a is MonotypeF.Apply && b is MonotypeF.Apply -> Either.monad<InferenceError>().binding {
+            val s1 = unify(a.function.value().fix(), b.function.value().fix()).bind()
+            val s2 = unify(apply(s1, a.arg.value().fix()), apply(s1, b.arg.value().fix())).bind()
             s2 compose s1
-        }
-        t1 is MonotypeF.Variable -> bind(t1, b)
-        t2 is MonotypeF.Variable -> bind(t2, a)
-        t1 is MonotypeF.Constant && t2 is MonotypeF.Constant && t1 == t2 -> emptySubst
-        else -> throw UnableToUnify(a, b)
+        }.fix()
+        a is MonotypeF.Variable -> bind(a, Fix(b))
+        b is MonotypeF.Variable -> bind(b, Fix(a))
+        a is MonotypeF.Constant && b is MonotypeF.Constant && a == b -> Right(emptySubst)
+        else -> Left(UnableToUnify(Fix(a), Fix(b)))
     }
 }
 
-fun bind(tVar: MonotypeF.Variable, type: Monotype): Subst = when {
-    tVar == type.unfix -> emptySubst
-    occursIn(tVar, type) -> throw InfiniteBind(tVar, type)
-    else -> mapOf(tVar.name to type)
+/**
+ * Binds [variable] in [type], or returns an [InferenceError] if the binding would create an infinite type.
+ */
+fun bind(variable: MonotypeF.Variable, type: Monotype): Either<InferenceError, Subst> = when {
+    variable == type.unfix -> Right(emptySubst)
+    Fix.recursive().occursIn(variable, type) -> Left(InfiniteBind(variable, type))
+    else -> Right(mapOf(variable.name to type))
 }
 
-fun occursIn(tVar: MonotypeF.Variable, type: Monotype): Boolean = Fix.recursive().run {
+/**
+ * Checks if [variable] occurs in [type].
+ */
+fun <T> Recursive<T>.occursIn(variable: MonotypeF.Variable, type: Kind<T, ForMonotypeF>): Boolean =
     MonotypeFFunctor.cata(type) {
         when (val type = it.fix()) {
             is MonotypeF.Constant -> Eval.now(false)
-            is MonotypeF.Variable -> Eval.now(type == tVar)
-            is MonotypeF.Apply -> Eval.monad().binding {
-                type.function.bind() || type.arg.bind()
-            }.fix()
+            is MonotypeF.Variable -> Eval.later { type == variable }
+            is MonotypeF.Apply -> type.function.flatMap { a -> type.arg.map { b -> a || b } }
         }
     }
-}
+
+/**
+ * Error class for when when two types [a] and [b] cannot be unified.
+ */
+class UnableToUnify(a: Monotype, b: Monotype) : InferenceError("Unable to unify $a and $b")
+
+/**
+ * Error class for when binding [variable] in [type] would create an infinite type.
+ */
+class InfiniteBind(variable: MonotypeF.Variable, type: Monotype) : InferenceError("Infinite bind $variable to $type")

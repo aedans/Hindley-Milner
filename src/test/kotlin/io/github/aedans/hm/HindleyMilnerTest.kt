@@ -1,25 +1,27 @@
 package io.github.aedans.hm
 
+import arrow.core.*
+import arrow.core.extensions.either.monad.monad
 import com.github.h0tk3y.betterParse.parser.parseToEnd
-import org.testng.Assert
 import org.testng.annotations.Test
 
 @Test
 class HindleyMilnerTest {
     private fun assertType(expr: String, type: String) {
-        unify(
-                Grammar.exprParser.parseToEnd(Grammar.tokenizer.tokenize(expr)).infer(Env.empty).second,
-                Grammar.typeParser.parseToEnd(Grammar.tokenizer.tokenize(type))
-        )
+        val result = Either.monad<InferenceError>().binding {
+            val (_, from) = Grammar.exprParser.parseToEnd(Grammar.tokenizer.tokenize(expr)).infer(Env.empty).bind()
+            val to = Grammar.typeParser.parseToEnd(Grammar.tokenizer.tokenize(type))
+            unify(from, to).bind()
+        }.fix()
+        result.fold({ assert(false) { it.message } }, { })
     }
 
-    private inline fun <reified T : Throwable> assertFailsWith(expr: String) {
-        Assert.expectThrows(T::class.java) {
-            Grammar.exprParser.parseToEnd(Grammar.tokenizer.tokenize(expr)).infer(Env.empty)
-        }
+    private inline fun <reified T> assertFailsWith(expr: String) {
+        Grammar.exprParser.parseToEnd(Grammar.tokenizer.tokenize(expr)).infer(Env.empty)
+                .fold({ assert(it is T) { "Expected ${T::class}, found ${it::class}" } }, { })
     }
 
-    fun id() = assertFailsWith<NoSuchElementException>("x")
+    fun id() = assertFailsWith<IsNotDefined>("x")
 
     fun bool() = assertType("true", "Bool")
 

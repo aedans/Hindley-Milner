@@ -20,6 +20,8 @@ object Repl {
         Option.fromNullable(readLine())
     })
 
+    fun output(error: InferenceError): IO<Unit> = IO { println(error.message) }
+
     /**
      * A process which outputs the type of an expression.
      */
@@ -34,9 +36,12 @@ object Repl {
                     OptionT.none(IO.applicative())
                 } else {
                     val expr = Grammar.parseToEnd(input)
-                    val (_, type) = expr.infer(Env.empty)
+                    val result = expr.infer(Env.empty)
                     fresh = 0
-                    OptionT.liftF(IO.functor(), output(expr, type.generalize(Env.empty)))
+                    OptionT.liftF(IO.functor(), result.fold(
+                            { output(it) },
+                            { (_, type) -> output(expr, type.generalize(Env.empty)) }
+                    ))
                 }
             }
             .flatMap(IO.monad()) { repl() }
