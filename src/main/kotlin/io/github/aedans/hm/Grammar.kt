@@ -11,7 +11,7 @@ import com.github.h0tk3y.betterParse.parser.Parser
  * Created by Aedan Smith.
  */
 
-object Grammar : com.github.h0tk3y.betterParse.grammar.Grammar<Expr>() {
+object Grammar : com.github.h0tk3y.betterParse.grammar.Grammar<TLCExpr>() {
     val ws by token("\\s+", ignore = true)
     val comment by token("\\/\\/.+", ignore = true)
     val oParen by token("\\(")
@@ -34,37 +34,37 @@ object Grammar : com.github.h0tk3y.betterParse.grammar.Grammar<Expr>() {
 
     // Exprs
 
-    val exprParser: Parser<Expr> = parser { abstractExprParser } or
+    val exprParser: Parser<TLCExpr> = parser { abstractExprParser } or
             parser { ifExprParser } or
             parser { castExprParser }
 
-    val abstractExprParser: Parser<Expr> = -backslash * identifier * -arrow * parser { exprParser } use {
-        Expr.Abstract(t1.text, t2)
+    val abstractExprParser: Parser<TLCExpr> = -backslash * identifier * -arrow * parser { exprParser } use {
+        TLCExpr.Abstract(t1.text, t2)
     }
 
-    val ifExprParser: Parser<Expr> = -`if` * parser { exprParser } *
+    val ifExprParser: Parser<TLCExpr> = -`if` * parser { exprParser } *
             -`then` * parser { exprParser } *
             -`else` * parser { exprParser } use {
-        Expr.If(t1, t2, t3)
+        TLCExpr.If(t1, t2, t3)
     }
 
-    val castExprParser: Parser<Expr> = parser { applyExprParser } * -extends * parser { typeParser } use {
-        Expr.Cast(t1, t2)
+    val castExprParser: Parser<TLCExpr> = parser { applyExprParser } * -extends * parser { typeParser } use {
+        TLCExpr.Cast(t1, t2)
     } or parser { applyExprParser }
 
-    val applyExprParser: Parser<Expr> = parser { atomicExprParser } * parser(this::applyExprParser) use {
-        Expr.Apply(t1, t2)
+    val applyExprParser: Parser<TLCExpr> = parser { atomicExprParser } * parser(this::applyExprParser) use {
+        TLCExpr.Apply(t1, t2)
     } or parser { atomicExprParser }
 
-    val atomicExprParser: Parser<Expr> = parser { parenthesizedExprParser } or
+    val atomicExprParser: Parser<TLCExpr> = parser { parenthesizedExprParser } or
             parser { boolExprParser } or
             parser { varExprParser }
 
-    val varExprParser: Parser<Expr.Var> = identifier use { Expr.Var(text) }
+    val varExprParser: Parser<TLCExpr.Var> = identifier use { TLCExpr.Var(text) }
 
-    val boolExprParser: Parser<Expr.Bool> = (`true` or `false`) use { Expr.Bool(text.toBoolean()) }
+    val boolExprParser: Parser<TLCExpr.Bool> = (`true` or `false`) use { TLCExpr.Bool(text.toBoolean()) }
 
-    val parenthesizedExprParser: Parser<Expr> = -oParen * parser { exprParser } * -cParen
+    val parenthesizedExprParser: Parser<TLCExpr> = -oParen * parser { exprParser } * -cParen
 
     // Types
 
