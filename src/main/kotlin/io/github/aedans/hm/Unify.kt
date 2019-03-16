@@ -39,20 +39,20 @@ fun bind(variable: MonotypeF.Variable, type: Monotype): Either<InferenceError, S
  * Checks if [variable] occurs in [type].
  */
 fun <T> Recursive<T>.occursIn(variable: MonotypeF.Variable, type: Kind<T, ForMonotypeF>): Boolean =
-    MonotypeFFunctor.cata(type) {
-        when (val type = it.fix()) {
-            is MonotypeF.Constant -> Eval.now(false)
-            is MonotypeF.Variable -> Eval.later { type == variable }
-            is MonotypeF.Apply -> type.function.flatMap { a -> type.arg.map { b -> a || b } }
+        MonotypeFFunctor.cata(type) {
+            when (val type = it.fix()) {
+                is MonotypeF.Constant -> Eval.now(false)
+                is MonotypeF.Variable -> Eval.later { type == variable }
+                is MonotypeF.Apply -> type.function.flatMap { a -> type.arg.map { b -> a || b } }
+            }
         }
-    }
 
 /**
  * Error class for when when two types [a] and [b] cannot be unified.
  */
-class UnableToUnify(a: Monotype, b: Monotype) : InferenceError("Unable to unify $a and $b")
+class UnableToUnify(a: Monotype, b: Monotype) : InferenceError("Unable to unify ${toString(a)} and ${toString(b)}")
 
 /**
  * Error class for when binding [variable] in [type] would create an infinite type.
  */
-class InfiniteBind(variable: MonotypeF.Variable, type: Monotype) : InferenceError("Infinite bind $variable to $type")
+class InfiniteBind(variable: MonotypeF.Variable, type: Monotype) : InferenceError("Infinite bind ${toString(Fix(variable))} to ${toString(type)}")

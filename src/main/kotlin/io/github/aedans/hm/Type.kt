@@ -1,8 +1,12 @@
 package io.github.aedans.hm
 
 import arrow.*
+import arrow.core.*
 import arrow.core.Eval.Companion.now
+import arrow.core.extensions.eval.monad.monad
 import arrow.recursion.data.Fix
+import arrow.recursion.extensions.fix.recursive.recursive
+import arrow.recursion.typeclasses.Recursive
 import arrow.typeclasses.Functor
 
 /**
@@ -67,11 +71,29 @@ object MonotypeFFunctor : Functor<ForMonotypeF> {
     }
 }
 
+fun toString(type: Monotype) = Fix.recursive().toString(type)
+
+fun <T> Recursive<T>.toString(type: Kind<T, ForMonotypeF>) =
+        MonotypeFFunctor.cata<ForMonotypeF, Pair<String, Boolean>>(type) {
+            when (val type = it.fix()) {
+                is MonotypeF.Variable -> now(type.name to true)
+                is MonotypeF.Constant -> now(type.name to true)
+                is MonotypeF.Apply -> Eval.monad().binding {
+                    val (function, atomic1) = type.function.bind()
+                    val (arg, atomic2) = type.arg.bind()
+                    when (function) {
+                        "->" -> (if (atomic2) "$arg ->" else "($arg) ->") to true
+                        else -> (if (atomic1) "$function $arg" else "($function) $arg") to false
+                    }
+                }.fix()
+            }
+        }.first
+
 /**
  * A data class representing a polytype.
  */
 data class Polytype(val names: List<String>, val type: Monotype) {
-    override fun toString() = "$names => $type"
+    override fun toString() = if (names.isEmpty()) toString(type) else "$names => ${toString(type)}"
 }
 
 val Monotype.scheme get() = Polytype(emptyList(), this)

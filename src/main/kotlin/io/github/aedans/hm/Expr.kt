@@ -1,8 +1,12 @@
 package io.github.aedans.hm
 
 import arrow.*
+import arrow.core.*
 import arrow.core.Eval.Companion.now
+import arrow.core.extensions.eval.monad.monad
 import arrow.recursion.data.Fix
+import arrow.recursion.extensions.fix.recursive.recursive
+import arrow.recursion.typeclasses.Recursive
 import arrow.typeclasses.Functor
 
 /**
@@ -99,3 +103,29 @@ object ExprFFunctor : Functor<ForExprF> {
         is ExprF.Cast -> ExprF.Cast(f(expr.expr), expr.type)
     }
 }
+
+fun toString(expr: Expr) = Fix.recursive().toString(expr)
+
+fun <T> Recursive<T>.toString(expr: Kind<T, ForExprF>) =
+        ExprFFunctor.cata<ForExprF, Pair<String, Boolean>>(expr) {
+            when (val expr = it.fix()) {
+                is ExprF.Variable -> Eval.now(expr.name to true)
+                is ExprF.Bool -> Eval.now(expr.bool.toString() to true)
+                is ExprF.Apply -> Eval.monad().binding {
+                    val (function, atomic) = expr.function.bind()
+                    val (arg, _) = expr.arg.bind()
+                    (if (atomic) "$function $arg" else "($function) $arg") to false
+                }.fix()
+                is ExprF.Abstract -> Eval.monad().binding {
+                    "\\${expr.arg} -> ${expr.body.bind().first}" to false
+                }.fix()
+                is ExprF.Cond -> Eval.monad().binding {
+                    "if ${expr.condition.bind().first} " +
+                            "then ${expr.success.bind().first} " +
+                            "else ${expr.failure.bind().first}" to false
+                }.fix()
+                is ExprF.Cast -> Eval.monad().binding {
+                    "${expr.expr.bind().first} :: ${toString(expr.type)}" to false
+                }.fix()
+            }
+        }.first
