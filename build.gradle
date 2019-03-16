@@ -14,8 +14,13 @@ buildscript {
     }
 }
 
+apply plugin: 'application'
 apply plugin: 'java'
 apply plugin: 'kotlin'
+
+application {
+    mainClassName = 'io.github.aedans.hm.Main'
+}
 
 repositories {
     mavenCentral()

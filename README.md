@@ -9,6 +9,6 @@ If you want to use this in a project, your best solution is to copy the sources 
 Building
 --------
 
-    ./kobaltw assemble  # Builds the project
-    ./kobaltw test      # Runs the unit tests
-    ./kobaltw run       # Runs the REPL
+    gradle build     # Builds the project
+    gradle test      # Runs the unit tests
+    gradle run       # Runs the REPL
