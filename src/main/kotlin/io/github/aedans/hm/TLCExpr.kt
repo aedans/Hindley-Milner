@@ -72,25 +72,22 @@ sealed class TLCExprF<out Self> : TLCExprFOf<Self> {
      * @param expr The expression to cast.
      * @param type The type to cast to.
      */
-    data class Cast<out Self>(val expr: Self, val type: TLCType.Mono) : TLCExprF<Self>() {
+    data class Cast<out Self>(val expr: Self, val type: TLCMonotype) : TLCExprF<Self>() {
         override fun toString() = "($expr) :: $type"
     }
 
-    /**
-     * Factory methods for the fixed points [TLCExprF].
-     */
     companion object {
         fun variable(name: String) = Fix(Variable(name))
         fun bool(bool: Boolean) = Fix(Bool(bool))
         fun apply(function: TLCExpr, arg: TLCExpr) = Fix(Apply(now(function), now(arg)))
         fun abstract(arg: String, body: TLCExpr) = Fix(Abstract(arg, now(body)))
         fun cond(condition: TLCExpr, success: TLCExpr, failure: TLCExpr) = Fix(Cond(now(condition), now(success), now(failure)))
-        fun cast(expr: TLCExpr, type: TLCType.Mono) = Fix(Cast(now(expr), type))
+        fun cast(expr: TLCExpr, type: TLCMonotype) = Fix(Cast(now(expr), type))
     }
 }
 
 /**
- * A functor instance for [TCLExprF].
+ * A functor instance for [TLCExprF].
  */
 object TLCExprFFunctor : Functor<ForTLCExprF> {
     override fun <A, B> TLCExprFOf<A>.map(f: (A) -> B) = when (val expr = fix()) {

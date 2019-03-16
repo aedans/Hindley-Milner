@@ -23,7 +23,7 @@ object Repl {
     /**
      * A process which outputs the type of an expression.
      */
-    fun output(expr: TLCExpr, type: TLCType): IO<Unit> = IO { println("$expr :: $type") }
+    fun output(expr: TLCExpr, type: TLCPolytype): IO<Unit> = IO { println("$expr :: $type") }
 
     /**
      * A process which runs the the REPL.
@@ -36,7 +36,7 @@ object Repl {
                     val expr = Grammar.parseToEnd(input)
                     val (_, type) = expr.infer(Env.empty)
                     fresh = 0
-                    OptionT.liftF(IO.functor(), output(expr, type))
+                    OptionT.liftF(IO.functor(), output(expr, type.generalize(Env.empty)))
                 }
             }
             .flatMap(IO.monad()) { repl() }

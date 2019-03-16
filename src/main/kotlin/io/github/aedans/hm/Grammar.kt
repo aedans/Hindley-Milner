@@ -65,23 +65,23 @@ object Grammar : com.github.h0tk3y.betterParse.grammar.Grammar<TLCExpr>() {
 
     // Types
 
-    val typeParser: Parser<TLCType.Mono> = parser { functionTypeParser }
+    val typeParser: Parser<TLCMonotype> = parser { functionTypeParser }
 
-    val functionTypeParser: Parser<TLCType.Mono> = parser { applyTypeParser } * -arrow * parser(this::functionTypeParser) use {
-        TLCType.Mono.Arrow(t1, t2).type
+    val functionTypeParser: Parser<TLCMonotype> = parser { applyTypeParser } * -arrow * parser(this::functionTypeParser) use {
+        TLCMonotypeF.arrow(t1, t2)
     } or parser { applyTypeParser }
 
-    val applyTypeParser: Parser<TLCType.Mono> = parser { atomicTypeParser } * parser(this::applyTypeParser) use {
-        TLCType.Mono.Apply(t1, t2)
+    val applyTypeParser: Parser<TLCMonotype> = parser { atomicTypeParser } * parser(this::applyTypeParser) use {
+        TLCMonotypeF.apply(t1, t2)
     } or parser { atomicTypeParser }
 
-    val atomicTypeParser: Parser<TLCType.Mono> = parser { varTypeParser } or
+    val atomicTypeParser: Parser<TLCMonotype> = parser { varTypeParser } or
             parser { constTypeParser } or
             parser { parenthesizedTypeParser }
 
-    val parenthesizedTypeParser: Parser<TLCType.Mono> = -oParen * parser { typeParser } * -cParen
+    val parenthesizedTypeParser: Parser<TLCMonotype> = -oParen * parser { typeParser } * -cParen
 
-    val constTypeParser: Parser<TLCType.Mono.Const> = constIdentifier use { TLCType.Mono.Const(text) }
+    val constTypeParser: Parser<TLCMonotype> = constIdentifier use { TLCMonotypeF.constant(text) }
 
-    val varTypeParser: Parser<TLCType.Mono.Var> = varIdentifier use { TLCType.Mono.Var(text) }
+    val varTypeParser: Parser<TLCMonotype> = varIdentifier use { TLCMonotypeF.variable(text) }
 }
