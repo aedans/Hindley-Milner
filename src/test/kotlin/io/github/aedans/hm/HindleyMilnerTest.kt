@@ -8,14 +8,14 @@ import org.testng.annotations.Test
 class HindleyMilnerTest {
     private fun assertType(expr: String, type: String) {
         unify(
-                Grammar.exprParser.parseToEnd(Grammar.lexer.tokenize(expr)).infer(Env.empty).second,
-                Grammar.typeParser.parseToEnd(Grammar.lexer.tokenize(type))
+                Grammar.exprParser.parseToEnd(Grammar.tokenizer.tokenize(expr)).infer(Env.empty).second,
+                Grammar.typeParser.parseToEnd(Grammar.tokenizer.tokenize(type))
         )
     }
 
     private inline fun <reified T : Throwable> assertFailsWith(expr: String) {
         Assert.expectThrows(T::class.java) {
-            Grammar.exprParser.parseToEnd(Grammar.lexer.tokenize(expr)).infer(Env.empty)
+            Grammar.exprParser.parseToEnd(Grammar.tokenizer.tokenize(expr)).infer(Env.empty)
         }
     }
 

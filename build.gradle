@@ -23,7 +23,7 @@ repositories {
 }
 
 dependencies {
-    compile 'com.github.h0tk3y.betterParse:better-parse:0.2.1'
+    compile 'com.github.h0tk3y.betterParse:better-parse:0.3.5'
     compile 'org.testng:testng:6.14.3'
 }
 
