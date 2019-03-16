@@ -6,9 +6,9 @@ import arrow.recursion.data.Fix
 import arrow.typeclasses.Functor
 
 /**
- * The fixed point of [TLCExprF].
+ * The fixed point of [ExprF].
  */
-typealias TLCExpr = Fix<ForTLCExprF>
+typealias Expr = Fix<ForExprF>
 
 /**
  * An algebraic data type representing a typed lambda calculus expression.
@@ -16,13 +16,13 @@ typealias TLCExpr = Fix<ForTLCExprF>
  * @param Self The fixed point of this type.
  */
 @higherkind
-sealed class TLCExprF<out Self> : TLCExprFOf<Self> {
+sealed class ExprF<out Self> : ExprFOf<Self> {
     /**
      * A data class representing a variable expression.
      *
      * @param name The name of the variable.
      */
-    data class Variable(val name: String) : TLCExprF<Nothing>() {
+    data class Variable(val name: String) : ExprF<Nothing>() {
         override fun toString() = name
     }
 
@@ -31,7 +31,7 @@ sealed class TLCExprF<out Self> : TLCExprFOf<Self> {
      *
      * @param bool The value of the boolean.
      */
-    data class Bool(val bool: Boolean) : TLCExprF<Nothing>() {
+    data class Bool(val bool: Boolean) : ExprF<Nothing>() {
         override fun toString() = "$bool"
     }
 
@@ -41,7 +41,7 @@ sealed class TLCExprF<out Self> : TLCExprFOf<Self> {
      * @param function The function being applied.
      * @param arg      The argument of the function.
      */
-    data class Apply<out Self>(val function: Self, val arg: Self) : TLCExprF<Self>() {
+    data class Apply<out Self>(val function: Self, val arg: Self) : ExprF<Self>() {
         override fun toString() = "($function) $arg"
     }
 
@@ -51,7 +51,7 @@ sealed class TLCExprF<out Self> : TLCExprFOf<Self> {
      * @param arg  The argument of the function.
      * @param body The body of the expression.
      */
-    data class Abstract<out Self>(val arg: String, val body: Self) : TLCExprF<Self>() {
+    data class Abstract<out Self>(val arg: String, val body: Self) : ExprF<Self>() {
         override fun toString() = "\\$arg -> $body"
     }
 
@@ -62,7 +62,7 @@ sealed class TLCExprF<out Self> : TLCExprFOf<Self> {
      * @param success   The result of the expression if the condition is true.
      * @param failure   The result of the expression if the condition is false.
      */
-    data class Cond<out Self>(val condition: Self, val success: Self, val failure: Self) : TLCExprF<Self>() {
+    data class Cond<out Self>(val condition: Self, val success: Self, val failure: Self) : ExprF<Self>() {
         override fun toString() = "if $condition then $success else $failure"
     }
 
@@ -72,30 +72,30 @@ sealed class TLCExprF<out Self> : TLCExprFOf<Self> {
      * @param expr The expression to cast.
      * @param type The type to cast to.
      */
-    data class Cast<out Self>(val expr: Self, val type: TLCMonotype) : TLCExprF<Self>() {
+    data class Cast<out Self>(val expr: Self, val type: Monotype) : ExprF<Self>() {
         override fun toString() = "($expr) :: $type"
     }
 
     companion object {
         fun variable(name: String) = Fix(Variable(name))
         fun bool(bool: Boolean) = Fix(Bool(bool))
-        fun apply(function: TLCExpr, arg: TLCExpr) = Fix(Apply(now(function), now(arg)))
-        fun abstract(arg: String, body: TLCExpr) = Fix(Abstract(arg, now(body)))
-        fun cond(condition: TLCExpr, success: TLCExpr, failure: TLCExpr) = Fix(Cond(now(condition), now(success), now(failure)))
-        fun cast(expr: TLCExpr, type: TLCMonotype) = Fix(Cast(now(expr), type))
+        fun apply(function: Expr, arg: Expr) = Fix(Apply(now(function), now(arg)))
+        fun abstract(arg: String, body: Expr) = Fix(Abstract(arg, now(body)))
+        fun cond(condition: Expr, success: Expr, failure: Expr) = Fix(Cond(now(condition), now(success), now(failure)))
+        fun cast(expr: Expr, type: Monotype) = Fix(Cast(now(expr), type))
     }
 }
 
 /**
- * A functor instance for [TLCExprF].
+ * A functor instance for [ExprF].
  */
-object TLCExprFFunctor : Functor<ForTLCExprF> {
-    override fun <A, B> TLCExprFOf<A>.map(f: (A) -> B) = when (val expr = fix()) {
-        is TLCExprF.Variable -> expr
-        is TLCExprF.Bool -> expr
-        is TLCExprF.Apply -> TLCExprF.Apply(f(expr.function), f(expr.arg))
-        is TLCExprF.Abstract -> TLCExprF.Abstract(expr.arg, f(expr.body))
-        is TLCExprF.Cond -> TLCExprF.Cond(f(expr.condition), f(expr.success), f(expr.failure))
-        is TLCExprF.Cast -> TLCExprF.Cast(f(expr.expr), expr.type)
+object ExprFFunctor : Functor<ForExprF> {
+    override fun <A, B> ExprFOf<A>.map(f: (A) -> B) = when (val expr = fix()) {
+        is ExprF.Variable -> expr
+        is ExprF.Bool -> expr
+        is ExprF.Apply -> ExprF.Apply(f(expr.function), f(expr.arg))
+        is ExprF.Abstract -> ExprF.Abstract(expr.arg, f(expr.body))
+        is ExprF.Cond -> ExprF.Cond(f(expr.condition), f(expr.success), f(expr.failure))
+        is ExprF.Cast -> ExprF.Cast(f(expr.expr), expr.type)
     }
 }

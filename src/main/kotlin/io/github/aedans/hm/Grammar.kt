@@ -8,7 +8,7 @@ import com.github.h0tk3y.betterParse.parser.Parser
  * Created by Aedan Smith.
  */
 
-object Grammar : com.github.h0tk3y.betterParse.grammar.Grammar<TLCExpr>() {
+object Grammar : com.github.h0tk3y.betterParse.grammar.Grammar<Expr>() {
     val ws by token("\\s+", ignore = true)
     val comment by token("\\/\\/.+", ignore = true)
     val oParen by token("\\(")
@@ -31,57 +31,57 @@ object Grammar : com.github.h0tk3y.betterParse.grammar.Grammar<TLCExpr>() {
 
     // Exprs
 
-    val exprParser: Parser<TLCExpr> = parser { abstractExprParser } or
+    val exprParser: Parser<Expr> = parser { abstractExprParser } or
             parser { ifExprParser } or
             parser { castExprParser }
 
-    val abstractExprParser: Parser<TLCExpr> = -backslash * identifier * -arrow * parser { exprParser } use {
-        TLCExprF.abstract(t1.text, t2)
+    val abstractExprParser: Parser<Expr> = -backslash * identifier * -arrow * parser { exprParser } use {
+        ExprF.abstract(t1.text, t2)
     }
 
-    val ifExprParser: Parser<TLCExpr> = -`if` * parser { exprParser } *
+    val ifExprParser: Parser<Expr> = -`if` * parser { exprParser } *
             -`then` * parser { exprParser } *
             -`else` * parser { exprParser } use {
-        TLCExprF.cond(t1, t2, t3)
+        ExprF.cond(t1, t2, t3)
     }
 
-    val castExprParser: Parser<TLCExpr> = parser { applyExprParser } * -extends * parser { typeParser } use {
-        TLCExprF.cast(t1, t2)
+    val castExprParser: Parser<Expr> = parser { applyExprParser } * -extends * parser { typeParser } use {
+        ExprF.cast(t1, t2)
     } or parser { applyExprParser }
 
-    val applyExprParser: Parser<TLCExpr> = parser { atomicExprParser } * parser(this::applyExprParser) use {
-        TLCExprF.apply(t1, t2)
+    val applyExprParser: Parser<Expr> = parser { atomicExprParser } * parser(this::applyExprParser) use {
+        ExprF.apply(t1, t2)
     } or parser { atomicExprParser }
 
-    val atomicExprParser: Parser<TLCExpr> = parser { parenthesizedExprParser } or
+    val atomicExprParser: Parser<Expr> = parser { parenthesizedExprParser } or
             parser { boolExprParser } or
             parser { varExprParser }
 
-    val varExprParser: Parser<TLCExpr> = identifier use { TLCExprF.variable(text) }
+    val varExprParser: Parser<Expr> = identifier use { ExprF.variable(text) }
 
-    val boolExprParser: Parser<TLCExpr> = (`true` or `false`) use { TLCExprF.bool(text.toBoolean()) }
+    val boolExprParser: Parser<Expr> = (`true` or `false`) use { ExprF.bool(text.toBoolean()) }
 
-    val parenthesizedExprParser: Parser<TLCExpr> = -oParen * parser { exprParser } * -cParen
+    val parenthesizedExprParser: Parser<Expr> = -oParen * parser { exprParser } * -cParen
 
     // Types
 
-    val typeParser: Parser<TLCMonotype> = parser { functionTypeParser }
+    val typeParser: Parser<Monotype> = parser { functionTypeParser }
 
-    val functionTypeParser: Parser<TLCMonotype> = parser { applyTypeParser } * -arrow * parser(this::functionTypeParser) use {
-        TLCMonotypeF.arrow(t1, t2)
+    val functionTypeParser: Parser<Monotype> = parser { applyTypeParser } * -arrow * parser(this::functionTypeParser) use {
+        MonotypeF.arrow(t1, t2)
     } or parser { applyTypeParser }
 
-    val applyTypeParser: Parser<TLCMonotype> = parser { atomicTypeParser } * parser(this::applyTypeParser) use {
-        TLCMonotypeF.apply(t1, t2)
+    val applyTypeParser: Parser<Monotype> = parser { atomicTypeParser } * parser(this::applyTypeParser) use {
+        MonotypeF.apply(t1, t2)
     } or parser { atomicTypeParser }
 
-    val atomicTypeParser: Parser<TLCMonotype> = parser { varTypeParser } or
+    val atomicTypeParser: Parser<Monotype> = parser { varTypeParser } or
             parser { constTypeParser } or
             parser { parenthesizedTypeParser }
 
-    val parenthesizedTypeParser: Parser<TLCMonotype> = -oParen * parser { typeParser } * -cParen
+    val parenthesizedTypeParser: Parser<Monotype> = -oParen * parser { typeParser } * -cParen
 
-    val constTypeParser: Parser<TLCMonotype> = constIdentifier use { TLCMonotypeF.constant(text) }
+    val constTypeParser: Parser<Monotype> = constIdentifier use { MonotypeF.constant(text) }
 
-    val varTypeParser: Parser<TLCMonotype> = varIdentifier use { TLCMonotypeF.variable(text) }
+    val varTypeParser: Parser<Monotype> = varIdentifier use { MonotypeF.variable(text) }
 }

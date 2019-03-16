@@ -23,7 +23,7 @@ object Repl {
     /**
      * A process which outputs the type of an expression.
      */
-    fun output(expr: TLCExpr, type: TLCPolytype): IO<Unit> = IO { println("$expr :: $type") }
+    fun output(expr: Expr, type: Polytype): IO<Unit> = IO { println("$expr :: $type") }
 
     /**
      * A process which runs the the REPL.

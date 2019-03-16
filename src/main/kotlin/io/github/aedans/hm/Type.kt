@@ -6,21 +6,21 @@ import arrow.recursion.data.Fix
 import arrow.typeclasses.Functor
 
 /**
- * The fixed point of [TLCExprF].
+ * The fixed point of [ExprF].
  */
-typealias TLCMonotype = Fix<ForTLCMonotypeF>
+typealias Monotype = Fix<ForMonotypeF>
 
 /**
  * An algebraic data type representing a monotype.
  */
 @higherkind
-sealed class TLCMonotypeF<out Self> : TLCMonotypeFOf<Self> {
+sealed class MonotypeF<out Self> : MonotypeFOf<Self> {
     /**
      * A data class representing a variable type.
      *
      * @param name The name of the variable.
      */
-    data class Variable(val name: String) : TLCMonotypeF<Nothing>() {
+    data class Variable(val name: String) : MonotypeF<Nothing>() {
         override fun toString() = name
     }
 
@@ -29,7 +29,7 @@ sealed class TLCMonotypeF<out Self> : TLCMonotypeFOf<Self> {
      *
      * @param name The name of the constant.
      */
-    data class Constant(val name: String) : TLCMonotypeF<Nothing>() {
+    data class Constant(val name: String) : MonotypeF<Nothing>() {
         override fun toString() = name
     }
 
@@ -39,15 +39,15 @@ sealed class TLCMonotypeF<out Self> : TLCMonotypeFOf<Self> {
      * @param function The type being applied.
      * @param arg      The argument of the type.
      */
-    data class Apply<out Self>(val function: Self, val arg: Self) : TLCMonotypeF<Self>() {
+    data class Apply<out Self>(val function: Self, val arg: Self) : MonotypeF<Self>() {
         override fun toString() = "($function) $arg"
     }
 
     companion object {
         fun variable(name: String) = Fix(Variable(name))
         fun constant(name: String) = Fix(Constant(name))
-        fun apply(function: TLCMonotype, arg: TLCMonotype) = Fix(Apply(now(function), now(arg)))
-        fun arrow(input: TLCMonotype, output: TLCMonotype) = apply(apply(TLCMonotypeF.constant("->"), input), output)
+        fun apply(function: Monotype, arg: Monotype) = Fix(Apply(now(function), now(arg)))
+        fun arrow(input: Monotype, output: Monotype) = apply(apply(MonotypeF.constant("->"), input), output)
 
         /**
          * The singleton primitive boolean type.
@@ -57,32 +57,32 @@ sealed class TLCMonotypeF<out Self> : TLCMonotypeFOf<Self> {
 }
 
 /**
- * A functor instance for [TLCMonotypeF].
+ * A functor instance for [MonotypeF].
  */
-object TLCMonotypeFFunctor : Functor<ForTLCMonotypeF> {
-    override fun <A, B> TLCMonotypeFOf<A>.map(f: (A) -> B) = when (val type = fix()) {
-        is TLCMonotypeF.Variable -> type
-        is TLCMonotypeF.Constant -> type
-        is TLCMonotypeF.Apply -> TLCMonotypeF.Apply(f(type.function), f(type.arg))
+object MonotypeFFunctor : Functor<ForMonotypeF> {
+    override fun <A, B> MonotypeFOf<A>.map(f: (A) -> B) = when (val type = fix()) {
+        is MonotypeF.Variable -> type
+        is MonotypeF.Constant -> type
+        is MonotypeF.Apply -> MonotypeF.Apply(f(type.function), f(type.arg))
     }
 }
 
 /**
  * A data class representing a polytype.
  */
-data class TLCPolytype(val names: List<String>, val type: TLCMonotype) {
+data class Polytype(val names: List<String>, val type: Monotype) {
     override fun toString() = "$names => $type"
 }
 
-val TLCMonotype.scheme get() = TLCPolytype(emptyList(), this)
+val Monotype.scheme get() = Polytype(emptyList(), this)
 
-fun TLCMonotype.generalize(env: Env) = TLCPolytype(
+fun Monotype.generalize(env: Env) = Polytype(
         freeTypeVariables().filterNot { tVar -> env.get(tVar).let { it != null && it.names.contains(tVar) } },
         this
 )
 
-fun TLCPolytype.instantiate() = run {
-    val namesP = names.map { TLCMonotypeF.variable(fresh()) }
+fun Polytype.instantiate() = run {
+    val namesP = names.map { MonotypeF.variable(fresh()) }
     val namesZ = (names zip namesP).toMap()
     apply(namesZ, type)
 }

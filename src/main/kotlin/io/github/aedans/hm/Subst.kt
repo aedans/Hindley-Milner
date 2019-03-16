@@ -2,7 +2,6 @@ package io.github.aedans.hm
 
 import arrow.core.*
 import arrow.core.extensions.eval.monad.monad
-import arrow.recursion.Algebra
 import arrow.recursion.data.Fix
 import arrow.recursion.extensions.fix.recursive.recursive
 
@@ -10,24 +9,24 @@ import arrow.recursion.extensions.fix.recursive.recursive
  * Created by Aedan Smith.
  */
 
-typealias Subst = Map<String, TLCMonotype>
+typealias Subst = Map<String, Monotype>
 
 val emptySubst: Subst = emptyMap()
 
 infix fun Subst.compose(subst: Subst) = (subst + this).mapValues { apply(this, it.value) }
 
-fun apply(subst: Subst, poly: TLCPolytype) = run {
+fun apply(subst: Subst, poly: Polytype) = run {
     val substP = poly.names.foldRight(subst) { a, b -> b - a }
-    TLCPolytype(poly.names, apply(substP, poly.type))
+    Polytype(poly.names, apply(substP, poly.type))
 }
 
-fun apply(subst: Subst, type: TLCMonotype): TLCMonotype = Fix.recursive().run {
-    TLCMonotypeFFunctor.cata(type) {
+fun apply(subst: Subst, type: Monotype): Monotype = Fix.recursive().run {
+    MonotypeFFunctor.cata(type) {
         when (val type = it.fix()) {
-            is TLCMonotypeF.Constant -> Eval.now(TLCMonotypeF.constant(type.name))
-            is TLCMonotypeF.Variable -> Eval.now(subst.getOrDefault(type.name, TLCMonotypeF.variable(type.name)))
-            is TLCMonotypeF.Apply -> Eval.monad().binding {
-                TLCMonotypeF.apply(type.function.bind(), type.arg.bind())
+            is MonotypeF.Constant -> Eval.now(MonotypeF.constant(type.name))
+            is MonotypeF.Variable -> Eval.now(subst.getOrDefault(type.name, MonotypeF.variable(type.name)))
+            is MonotypeF.Apply -> Eval.monad().binding {
+                MonotypeF.apply(type.function.bind(), type.arg.bind())
             }.fix()
         }
     }
@@ -35,14 +34,14 @@ fun apply(subst: Subst, type: TLCMonotype): TLCMonotype = Fix.recursive().run {
 
 fun apply(subst: Subst, env: Env) = env.map { apply(subst, it) }
 
-fun TLCPolytype.freeTypeVariables() = type.freeTypeVariables() - names.toSet()
+fun Polytype.freeTypeVariables() = type.freeTypeVariables() - names.toSet()
 
-fun TLCMonotype.freeTypeVariables(): Set<String> = Fix.recursive().run {
-    TLCMonotypeFFunctor.cata(this@freeTypeVariables) {
+fun Monotype.freeTypeVariables(): Set<String> = Fix.recursive().run {
+    MonotypeFFunctor.cata(this@freeTypeVariables) {
         when (val type = it.fix()) {
-            is TLCMonotypeF.Constant -> Eval.now(emptySet())
-            is TLCMonotypeF.Variable -> Eval.now(setOf(type.name))
-            is TLCMonotypeF.Apply -> Eval.monad().binding {
+            is MonotypeF.Constant -> Eval.now(emptySet())
+            is MonotypeF.Variable -> Eval.now(setOf(type.name))
+            is MonotypeF.Apply -> Eval.monad().binding {
                 type.function.bind() + type.arg.bind()
             }.fix()
         }

@@ -8,7 +8,7 @@ var fresh = 0
 fun fresh() = "${fresh++}"
 
 interface Env {
-    fun get(name: String): TLCPolytype?
+    fun get(name: String): Polytype?
 
     companion object {
         val empty = object : Env {
@@ -18,7 +18,7 @@ interface Env {
     }
 }
 
-fun Env.set(name: String, poly: TLCPolytype): Env = run {
+fun Env.set(name: String, poly: Polytype): Env = run {
     @Suppress("UnnecessaryVariable", "LocalVariableName")
     val _name = name
     object : Env {
@@ -26,6 +26,6 @@ fun Env.set(name: String, poly: TLCPolytype): Env = run {
     }
 }
 
-fun Env.map(fn: (TLCPolytype) -> TLCPolytype) = object : Env {
+fun Env.map(fn: (Polytype) -> Polytype) = object : Env {
     override fun get(name: String) = this@map.get(name)?.let(fn)
 }
