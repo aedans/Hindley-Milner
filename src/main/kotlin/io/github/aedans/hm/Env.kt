@@ -7,25 +7,25 @@ package io.github.aedans.hm
 var fresh = 0
 fun fresh() = "${fresh++}"
 
-interface Env {
-    fun get(name: String): Polytype?
+interface Env<out T> {
+    fun get(name: String): Polytype<T>?
 
     companion object {
-        val empty = object : Env {
+        val empty = object : Env<Nothing> {
             override fun get(name: String) = null
             override fun toString() = "[]"
         }
     }
 }
 
-fun Env.set(name: String, poly: Polytype): Env = run {
+fun <T> Env<T>.set(name: String, poly: Polytype<T>): Env<T> = run {
     @Suppress("UnnecessaryVariable", "LocalVariableName")
     val _name = name
-    object : Env {
+    object : Env<T> {
         override fun get(name: String) = if (name == _name) poly else this@set.get(name)
     }
 }
 
-fun Env.map(fn: (Polytype) -> Polytype) = object : Env {
+fun <T> Env<T>.map(fn: (Polytype<T>) -> Polytype<T>) = object : Env<T> {
     override fun get(name: String) = this@map.get(name)?.let(fn)
 }

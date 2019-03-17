@@ -4,15 +4,13 @@ import arrow.*
 import arrow.core.*
 import arrow.core.Eval.Companion.now
 import arrow.core.extensions.eval.monad.monad
-import arrow.recursion.data.Fix
-import arrow.recursion.extensions.fix.recursive.recursive
-import arrow.recursion.typeclasses.Recursive
-import arrow.typeclasses.Functor
+import arrow.recursion.typeclasses.*
+import arrow.typeclasses.*
 
 /**
  * The fixed point of [ExprF].
  */
-typealias Expr = Fix<ForExprF>
+typealias Expr<T> = Kind<T, ForExprF>
 
 /**
  * An algebraic data type representing a typed lambda calculus expression.
@@ -69,25 +67,26 @@ sealed class ExprF<out Self> : ExprFOf<Self> {
     data class Cond<out Self>(val condition: Self, val success: Self, val failure: Self) : ExprF<Self>() {
         override fun toString() = "if $condition then $success else $failure"
     }
+}
 
-    /**
-     * A data class representing expression casting.
-     *
-     * @param expr The expression to cast.
-     * @param type The type to cast to.
-     */
-    data class Cast<out Self>(val expr: Self, val type: Monotype) : ExprF<Self>() {
-        override fun toString() = "($expr) :: $type"
-    }
+/**
+ * A factory for expressions.
+ */
+class ExprFactory<T>(corecursive: Corecursive<T>) : Corecursive<T> by corecursive {
+    fun variable(name: String) =
+            ExprFFunctor.embedT(ExprF.Variable(name))
 
-    companion object {
-        fun variable(name: String) = Fix(Variable(name))
-        fun bool(bool: Boolean) = Fix(Bool(bool))
-        fun apply(function: Expr, arg: Expr) = Fix(Apply(now(function), now(arg)))
-        fun abstract(arg: String, body: Expr) = Fix(Abstract(arg, now(body)))
-        fun cond(condition: Expr, success: Expr, failure: Expr) = Fix(Cond(now(condition), now(success), now(failure)))
-        fun cast(expr: Expr, type: Monotype) = Fix(Cast(now(expr), type))
-    }
+    fun bool(bool: Boolean) =
+            ExprFFunctor.embedT(ExprF.Bool(bool))
+
+    fun apply(function: Expr<T>, arg: Expr<T>) =
+            ExprFFunctor.embedT(ExprF.Apply(now(function), now(arg)))
+
+    fun abstract(arg: String, body: Expr<T>) =
+            ExprFFunctor.embedT(ExprF.Abstract(arg, now(body)))
+
+    fun cond(condition: Expr<T>, success: Expr<T>, failure: Expr<T>) =
+            ExprFFunctor.embedT(ExprF.Cond(now(condition), now(success), now(failure)))
 }
 
 /**
@@ -100,32 +99,31 @@ object ExprFFunctor : Functor<ForExprF> {
         is ExprF.Apply -> ExprF.Apply(f(expr.function), f(expr.arg))
         is ExprF.Abstract -> ExprF.Abstract(expr.arg, f(expr.body))
         is ExprF.Cond -> ExprF.Cond(f(expr.condition), f(expr.success), f(expr.failure))
-        is ExprF.Cast -> ExprF.Cast(f(expr.expr), expr.type)
     }
 }
 
-fun toString(expr: Expr) = Fix.recursive().toString(expr)
-
-fun <T> Recursive<T>.toString(expr: Kind<T, ForExprF>) =
-        ExprFFunctor.cata<ForExprF, Pair<String, Boolean>>(expr) {
-            when (val expr = it.fix()) {
-                is ExprF.Variable -> Eval.now(expr.name to true)
-                is ExprF.Bool -> Eval.now(expr.bool.toString() to true)
-                is ExprF.Apply -> Eval.monad().binding {
-                    val (function, atomic) = expr.function.bind()
-                    val (arg, _) = expr.arg.bind()
-                    (if (atomic) "$function $arg" else "($function) $arg") to false
-                }.fix()
-                is ExprF.Abstract -> Eval.monad().binding {
-                    "\\${expr.arg} -> ${expr.body.bind().first}" to false
-                }.fix()
-                is ExprF.Cond -> Eval.monad().binding {
-                    "if ${expr.condition.bind().first} " +
-                            "then ${expr.success.bind().first} " +
-                            "else ${expr.failure.bind().first}" to false
-                }.fix()
-                is ExprF.Cast -> Eval.monad().binding {
-                    "${expr.expr.bind().first} :: ${toString(expr.type)}" to false
-                }.fix()
-            }
-        }.first
+/**
+ * A show instance for [Expr].
+ */
+class ExprShow<T>(recursive: Recursive<T>) : Show<Expr<T>>, Recursive<T> by recursive {
+    override fun Expr<T>.show() =
+            ExprFFunctor.cata<ForExprF, Pair<String, Boolean>>(this) {
+                when (val expr = it.fix()) {
+                    is ExprF.Variable -> Eval.now(expr.name to true)
+                    is ExprF.Bool -> Eval.now(expr.bool.toString() to true)
+                    is ExprF.Apply -> Eval.monad().binding {
+                        val (function, atomic) = expr.function.bind()
+                        val (arg, _) = expr.arg.bind()
+                        (if (atomic) "$function $arg" else "($function) $arg") to false
+                    }.fix()
+                    is ExprF.Abstract -> Eval.monad().binding {
+                        "\\${expr.arg} -> ${expr.body.bind().first}" to false
+                    }.fix()
+                    is ExprF.Cond -> Eval.monad().binding {
+                        "if ${expr.condition.bind().first} " +
+                                "then ${expr.success.bind().first} " +
+                                "else ${expr.failure.bind().first}" to false
+                    }.fix()
+                }
+            }.first
+}
