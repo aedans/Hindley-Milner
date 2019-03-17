@@ -17,20 +17,22 @@ fun <T> Birecursive<T>.infer(expr: Expr<T>, env: Env<T>): InferResult<T> = Monot
     fun impl(it: ExprF<Eval<(Env<T>) -> InferResult<T>>>, env: Env<T>): InferResult<T> = when (val expr = it.fix()) {
         is ExprF.Bool -> Right(emptySubst<T>() to bool.value())
         is ExprF.Variable -> {
-            val type = env.get(expr.name)
+            val type = env[expr.name]
             if (type == null) Left(IsNotDefined(expr.name))
-            else Right(emptySubst<T>() to instantiate(type))
+            else Right(emptySubst<T>() to instantiate(type, env))
         }
         is ExprF.Apply -> Either.monad<InferenceError>().binding {
-            val typeVariable = variable(fresh()).value()
+            val (fresh, env) = env.fresh()
+            val typeVariable = variable(fresh.toString()).value()
             val (s1, expr1Type) = expr.function(env).bind()
             val (s2, expr2Type) = expr.arg(apply(s1, env)).bind()
             val s3 = unify(apply(s2, expr1Type), arrow(expr2Type, typeVariable).value()).bind()
             compose(s3, s2, s1) to apply(s3, typeVariable)
         }.fix()
         is ExprF.Abstract -> Either.monad<InferenceError>().binding {
-            val arg = variable(fresh()).value()
-            val envP = env.set(expr.arg, poly(arg))
+            val (fresh, env) = env.fresh()
+            val arg = variable(fresh.toString()).value()
+            val envP = env.put(expr.arg, poly(arg))
             val (s1, exprType) = expr.body(envP).bind()
             s1 to arrow(apply(s1, arg), exprType).value()
         }.fix()

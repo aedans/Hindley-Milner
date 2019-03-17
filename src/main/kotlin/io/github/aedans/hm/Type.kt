@@ -127,8 +127,8 @@ fun <T> Recursive<T>.generalize(type: Monotype<T>, env: Env<T>): Polytype<T> = P
 /**
  * Instantiates a polytype.
  */
-fun <T> Birecursive<T>.instantiate(type: Polytype<T>): Monotype<T> = MonotypeFactory(this).run {
-    val namesP = type.names.map { variable(fresh()).value() }
+fun <T> Birecursive<T>.instantiate(type: Polytype<T>, env: Env<T>): Monotype<T> = MonotypeFactory(this).run {
+    val namesP = env.fresh(type.names.size).first.map { variable(it.toString()).value() }.toList()
     val namesZ = (type.names zip namesP).toMap()
     apply(namesZ, type.type)
 }

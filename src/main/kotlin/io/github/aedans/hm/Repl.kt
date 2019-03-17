@@ -45,7 +45,6 @@ fun <T> Birecursive<T>.repl(grammar: Grammar<T>): OptionT<ForIO, Unit> = input()
             } else {
                 val expr = grammar.parseToEnd(input)
                 val result = infer(expr, Env.empty)
-                fresh = 'a'
                 OptionT.liftF(IO.functor(), result.fold(
                         { output(it) },
                         { (_, type) -> output(expr, generalize(type, Env.empty)) }
