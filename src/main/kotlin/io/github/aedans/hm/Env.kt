@@ -4,7 +4,7 @@ package io.github.aedans.hm
  * Created by Aedan Smith.
  */
 
-var fresh = 0
+var fresh = 'a'
 fun fresh() = "${fresh++}"
 
 interface Env<out T> {
