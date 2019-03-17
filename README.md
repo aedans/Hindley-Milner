@@ -12,3 +12,30 @@ Building
     gradle build     # Builds the project
     gradle test      # Runs the unit tests
     gradle run       # Runs the REPL
+
+Supported Expressions
+---------------------
+
+Boolean
+
+    true :: Bool
+    false :: Bool
+
+Abstraction
+    
+    \x -> x :: a -> a
+    \x -> \y -> x :: a -> b -> a
+    \x -> y :: Undefined variable y
+
+Application
+    
+    \x -> \y -> x y :: (a -> b) -> a -> b
+    \x -> \y -> (x y) y :: (a -> a -> b) -> a -> b
+    \x -> x x :: Infinite bind a to a -> a
+    true false :: Unable to unify Bool and Bool -> a
+
+Condition
+
+    if true then true else false :: Bool
+    \x -> if x then false else true :: Bool -> Bool
+    \x -> \y -> \z -> if x then y else z :: Bool -> a -> a -> a

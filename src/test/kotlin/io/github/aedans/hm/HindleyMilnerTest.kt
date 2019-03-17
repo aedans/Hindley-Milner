@@ -29,7 +29,7 @@ class HindleyMilnerTest : Birecursive<ForMu> by Mu.birecursive() {
                 .fold({ assert(it is T) { "Expected ${T::class}, found ${it::class}" } }, { })
     }
 
-    fun id() = assertFailsWith<IsNotDefined>("x")
+    fun id() = assertFailsWith<UndefinedVariable>("x")
 
     fun bool() = assertType("true", "Bool")
 

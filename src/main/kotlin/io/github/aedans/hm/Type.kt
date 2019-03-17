@@ -98,18 +98,6 @@ class MonotypeShow<T>(recursive: Recursive<T>) : Show<Monotype<T>>, Recursive<T>
 data class Polytype<out T>(val names: List<String>, val type: Monotype<T>) : PolytypeOf<T>
 
 /**
- * A show instance for [Polytype].
- */
-class PolytypeShow<T>(recursive: Recursive<T>) : Show<Polytype<T>> {
-    val monotypeShow = MonotypeShow(recursive)
-
-    override fun Polytype<T>.show() = monotypeShow.run {
-        val type = type.show()
-        if (names.isEmpty()) type else "$names => $type"
-    }
-}
-
-/**
  * Converts a monotype to a polytype.
  */
 fun <T> poly(type: Monotype<T>): Polytype<T> = Polytype(emptyList(), type)

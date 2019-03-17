@@ -18,7 +18,7 @@ fun <T> Birecursive<T>.infer(expr: Expr<T>, env: Env<T>): InferResult<T> = Monot
         is ExprF.Bool -> Right(emptySubst<T>() to bool.value())
         is ExprF.Variable -> {
             val type = env[expr.name]
-            if (type == null) Left(IsNotDefined(expr.name))
+            if (type == null) Left(UndefinedVariable(expr.name))
             else Right(emptySubst<T>() to instantiate(type, env))
         }
         is ExprF.Apply -> Either.monad<InferenceError>().binding {
@@ -60,6 +60,6 @@ private operator fun <A, B> Eval<(A) -> B>.invoke(a: A): B = value()(a)
 abstract class InferenceError(val message: String)
 
 /**
- * Error when something is not defined.
+ * Error when a variable is not defined.
  */
-class IsNotDefined(name: String) : InferenceError("$name is not defined")
+class UndefinedVariable(name: String) : InferenceError("Undefined variable $name")

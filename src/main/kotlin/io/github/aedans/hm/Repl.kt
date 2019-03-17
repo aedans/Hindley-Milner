@@ -31,7 +31,7 @@ fun output(error: InferenceError): IO<Unit> = IO { println(error.message) }
  */
 fun <T> Recursive<T>.output(expr: Expr<T>, type: Polytype<T>): IO<Unit> = IO {
     val expr = ExprShow(this).run { expr.show() }
-    val type = PolytypeShow(this).run { type.show() }
+    val type = MonotypeShow(this).run { type.type.show() }
     println("$expr :: $type")
 }
 
