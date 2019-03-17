@@ -97,6 +97,9 @@ class MonotypeShow<T>(recursive: Recursive<T>) : Show<Monotype<T>>, Recursive<T>
 @higherkind
 data class Polytype<out T>(val names: List<String>, val type: Monotype<T>) : PolytypeOf<T>
 
+/**
+ * A show instance for [Polytype].
+ */
 class PolytypeShow<T>(recursive: Recursive<T>) : Show<Polytype<T>> {
     val monotypeShow = MonotypeShow(recursive)
 

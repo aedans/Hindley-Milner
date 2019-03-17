@@ -9,12 +9,11 @@ import com.github.h0tk3y.betterParse.parser.Parser
  */
 class Grammar<T>(monotypeFactory: MonotypeFactory<T>, exprFactory: ExprFactory<T>) : com.github.h0tk3y.betterParse.grammar.Grammar<Expr<T>>() {
     val ws by token("\\s+", ignore = true)
-    val comment by token("\\/\\/.+", ignore = true)
+    val comment by token("//.+", ignore = true)
     val oParen by token("\\(")
     val cParen by token("\\)")
     val backslash by token("\\\\")
-    val eq by token("\\=")
-    val arrow by token("\\-\\>")
+    val arrow by token("->")
     val `if` by token("if")
     val then by token("then")
     val `else` by token("else")
